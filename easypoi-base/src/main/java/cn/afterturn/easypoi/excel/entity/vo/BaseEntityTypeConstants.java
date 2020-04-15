@@ -13,5 +13,6 @@ package cn.afterturn.easypoi.excel.entity.vo;
 public interface BaseEntityTypeConstants {
     public final static Integer STRING_TYPE = 1;
     public final static Integer DOUBLE_TYPE = 10;
+    public final static Integer DOUBLE_THOUSAND_TYPE = 11;
     public final static Integer IMAGE_TYPE = 3;
 }

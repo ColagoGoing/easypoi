@@ -64,6 +64,10 @@ public abstract class BaseExportService extends ExportCommonService {
 
     private static final DecimalFormat DOUBLE_FORMAT = new DecimalFormat("######0.00");
 
+    private static final String DOUBLE_THOUSAND_FORMAT = ",###,###,###,##0.00";
+
+    private static final String THOUSAND_STRING_FORMAT = ",";
+
     protected IExcelExportStyler excelExportStyler;
 
     /**
@@ -122,6 +126,15 @@ public abstract class BaseExportService extends ExportCommonService {
                         createDoubleCell(row, cellNum++, value == null ? "" : value.toString(),
                                 index % 2 == 0 ? getStyles(false, entity) : getStyles(true, entity),
                                 entity);
+                        if (entity.isHyperlink()) {
+                            row.getCell(cellNum - 1).setHyperlink(dataHandler.getHyperlink(
+                                    row.getSheet().getWorkbook().getCreationHelper(), t,
+                                    entity.getName(), value));
+                        }
+                    } else if (entity.getType() == BaseEntityTypeConstants.DOUBLE_THOUSAND_TYPE) {
+                        createDoubleThousandCell(row, cellNum++, value == null ? "" : value.toString(),
+                                index % 2 == 0 ? getStyles(false, entity) : getStyles(true, entity),
+                                entity, workbook);
                         if (entity.isHyperlink()) {
                             row.getCell(cellNum - 1).setHyperlink(dataHandler.getHyperlink(
                                     row.getSheet().getWorkbook().getCreationHelper(), t,
@@ -296,6 +309,38 @@ public abstract class BaseExportService extends ExportCommonService {
         }
         addStatisticsData(index, text, entity);
     }
+
+    /**
+     * 创建带千分位数字类型的Cell
+     */
+    public void createDoubleThousandCell(Row row, int index, String text, CellStyle style,
+                                         ExcelExportEntity entity, Workbook workbook) {
+        Cell cell = row.createCell(index);
+        cell.setCellType(Cell.CELL_TYPE_NUMERIC);
+        if (text != null && text.length() > 0) {
+            try {
+                cell.setCellValue(Double.parseDouble(text));
+            } catch (NumberFormatException e) {
+                if(text.contains(THOUSAND_STRING_FORMAT)){
+                    try {
+                        cell.setCellValue(Double.parseDouble( text.replaceAll(THOUSAND_STRING_FORMAT, "")));
+                    } catch (NumberFormatException ex) {
+                        cell.setCellType(Cell.CELL_TYPE_STRING);
+                        cell.setCellValue(text);
+                    }
+                }else {
+                    cell.setCellType(Cell.CELL_TYPE_STRING);
+                    cell.setCellValue(text);
+                }
+            }
+        }
+        if (style != null) {
+            style.setDataFormat(workbook.createDataFormat().getFormat(DOUBLE_THOUSAND_FORMAT));
+            cell.setCellStyle(style);
+        }
+        addStatisticsData(index, text, entity);
+    }
+
 
     /**
      * 创建统计行
